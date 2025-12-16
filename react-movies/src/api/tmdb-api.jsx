@@ -36,12 +36,18 @@ import {
  * console.log(movies.results); // Array of movie objects
  */
 export const getMovies = () => {
-  return apiClient("/discover/movie", {
-    params: {
-      include_adult: false,
-      include_video: false,
-      page: 1,
-    },
+  return fetch(
+    `http://localhost:8080/api/movies/discover`
+  ).then((response) => {
+    if (!response.ok) {
+      return response.json().then((error) => {
+        throw new Error(error.status_message || "Something went wrong");
+      });
+    }
+    return response.json();
+  })
+  .catch((error) => {
+      throw error
   });
 };
 
