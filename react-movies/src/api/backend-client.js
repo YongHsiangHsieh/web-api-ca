@@ -158,6 +158,208 @@ export const login = async (username, password) => {
   return data.token;
 };
 
+// ============================================
+// FAVORITES API FUNCTIONS
+// These handle user's favorite movies list
+// All require authentication (token parameter)
+// ============================================
+
+/**
+ * Gets the authenticated user's list of favorite movie IDs
+ * 
+ * @async
+ * @function
+ * @param {string} token - JWT token from login
+ * 
+ * @returns {Promise<number[]>} Array of TMDB movie IDs
+ * 
+ * @throws {Error} Throws if not authenticated or request fails
+ * 
+ * @example
+ * const favorites = await getFavorites(token);
+ * console.log(favorites); // [550, 438631, 157336]
+ */
+export const getFavorites = async (token) => {
+  const response = await fetch(`${BASE_URL}/users/favorites`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.msg || 'Failed to get favorites');
+  }
+
+  return data.favorites;
+};
+
+/**
+ * Adds a movie to the user's favorites list
+ * 
+ * @async
+ * @function
+ * @param {string} token - JWT token from login
+ * @param {number} movieId - TMDB movie ID to add
+ * 
+ * @returns {Promise<number[]>} Updated array of favorite movie IDs
+ * 
+ * @throws {Error} Throws if not authenticated or request fails
+ * 
+ * @example
+ * const updatedFavorites = await addFavorite(token, 550);
+ */
+export const addFavorite = async (token, movieId) => {
+  const response = await fetch(`${BASE_URL}/users/favorites/${movieId}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.msg || 'Failed to add favorite');
+  }
+
+  return data.favorites;
+};
+
+/**
+ * Removes a movie from the user's favorites list
+ * 
+ * @async
+ * @function
+ * @param {string} token - JWT token from login
+ * @param {number} movieId - TMDB movie ID to remove
+ * 
+ * @returns {Promise<number[]>} Updated array of favorite movie IDs
+ * 
+ * @throws {Error} Throws if not authenticated or request fails
+ * 
+ * @example
+ * const updatedFavorites = await removeFavorite(token, 550);
+ */
+export const removeFavorite = async (token, movieId) => {
+  const response = await fetch(`${BASE_URL}/users/favorites/${movieId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.msg || 'Failed to remove favorite');
+  }
+
+  return data.favorites;
+};
+
+// ============================================
+// MUST-WATCH API FUNCTIONS
+// These handle user's must-watch movies list
+// All require authentication (token parameter)
+// ============================================
+
+/**
+ * Gets the authenticated user's list of must-watch movie IDs
+ * 
+ * @async
+ * @function
+ * @param {string} token - JWT token from login
+ * 
+ * @returns {Promise<number[]>} Array of TMDB movie IDs
+ * 
+ * @throws {Error} Throws if not authenticated or request fails
+ * 
+ * @example
+ * const mustWatch = await getMustWatch(token);
+ * console.log(mustWatch); // [438631, 157336]
+ */
+export const getMustWatch = async (token) => {
+  const response = await fetch(`${BASE_URL}/users/mustwatch`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.msg || 'Failed to get must-watch list');
+  }
+
+  return data.mustWatch;
+};
+
+/**
+ * Adds a movie to the user's must-watch list
+ * 
+ * @async
+ * @function
+ * @param {string} token - JWT token from login
+ * @param {number} movieId - TMDB movie ID to add
+ * 
+ * @returns {Promise<number[]>} Updated array of must-watch movie IDs
+ * 
+ * @throws {Error} Throws if not authenticated or request fails
+ * 
+ * @example
+ * const updatedMustWatch = await addToMustWatch(token, 438631);
+ */
+export const addToMustWatch = async (token, movieId) => {
+  const response = await fetch(`${BASE_URL}/users/mustwatch/${movieId}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.msg || 'Failed to add to must-watch');
+  }
+
+  return data.mustWatch;
+};
+
+/**
+ * Removes a movie from the user's must-watch list
+ * 
+ * @async
+ * @function
+ * @param {string} token - JWT token from login
+ * @param {number} movieId - TMDB movie ID to remove
+ * 
+ * @returns {Promise<number[]>} Updated array of must-watch movie IDs
+ * 
+ * @throws {Error} Throws if not authenticated or request fails
+ * 
+ * @example
+ * const updatedMustWatch = await removeFromMustWatch(token, 438631);
+ */
+export const removeFromMustWatch = async (token, movieId) => {
+  const response = await fetch(`${BASE_URL}/users/mustwatch/${movieId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.msg || 'Failed to remove from must-watch');
+  }
+
+  return data.mustWatch;
+};
+
 /**
  * Helper functions for extracting data from React Query's queryKey
  * 
