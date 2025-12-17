@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Navigate, Routes } from "react-router";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import Box from "@mui/material/Box";
 import HomePage from "./pages/homePage";
 import MoviePage from "./pages/movieDetailsPage";
 import MyListPage from "./pages/myListPage";
@@ -22,6 +23,8 @@ import UpcomingMoviesPage from "./pages/upcomingMoviesPage";
 import LoginPage from "./pages/loginPage";
 import SignupPage from "./pages/signupPage";
 import ProtectedRoute from "./components/protectedRoute";
+import FestiveBanner from "./components/festiveBanner";
+import Snowfall from "./components/snowfall";
 import { ROUTES } from "./constants/routes";
 import theme from "./theme";
 
@@ -85,9 +88,20 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        {/* 🎄 Holiday snowfall animation - visible above content */}
+        <Snowfall />
+        {/* 🎄 Winter atmosphere - subtle dark gradient background */}
+        <Box
+          sx={{
+            minHeight: "100vh",
+            background: "linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+          }}
+        >
         <BrowserRouter>
           <AuthContextProvider>
             <SiteHeader />
+            {/* 🎄 Holiday banner - appears below header on all pages */}
+            <FestiveBanner />
             <MoviesContextProvider>
               {/* I define all application routes here. Each route maps a path to a page component.
                   Routes are organized by feature (auth, movies, reviews, actors, search) for clarity. */}
@@ -149,6 +163,7 @@ const App = () => {
             </MoviesContextProvider>
           </AuthContextProvider>
         </BrowserRouter>
+        </Box>
         <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>
     </QueryClientProvider>

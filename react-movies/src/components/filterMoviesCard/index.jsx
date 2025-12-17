@@ -112,7 +112,7 @@ export default function FilterMoviesCard(props) {
   // Loading State - I show skeleton placeholders that match the final layout
   if (isPending) {
     return (
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper elevation={3} sx={{ p: 2, mb: 3, backgroundColor: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(10px)" }}>
         {/* Search bar skeleton - I match the search bar's layout */}
         <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
           <Skeleton variant="rectangular" height={40} sx={{ flex: 1 }} />
@@ -133,7 +133,7 @@ export default function FilterMoviesCard(props) {
   // Error State - I display the error message in a user-friendly format
   if (isError) {
     return (
-      <Paper sx={{ p: 3, mb: 3, textAlign: "center" }}>
+      <Paper elevation={3} sx={{ p: 3, mb: 3, textAlign: "center", backgroundColor: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(10px)" }}>
         <Typography color="error">{error.message}</Typography>
       </Paper>
     );
@@ -211,12 +211,12 @@ export default function FilterMoviesCard(props) {
 
   return (
     <Paper
-      elevation={1}
+      elevation={3}
       sx={{
         p: 2,
         mb: 3,
-        background: (theme) =>
-          `linear-gradient(135deg, ${theme.palette.primary.main}08 0%, ${theme.palette.secondary.main}08 100%)`,
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        backdropFilter: "blur(10px)",
       }}
     >
       {/* Search Bar Row - I separate this from filters because it navigates to a different page */}
