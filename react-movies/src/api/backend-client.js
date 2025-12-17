@@ -54,20 +54,15 @@ const BASE_URL = 'http://localhost:8080/api';
  * const movie = await backendFetch('/movies/550');
  */
 export const backendFetch = async (endpoint) => {
-  try {
-    const response = await fetch(`${BASE_URL}${endpoint}`);
-    
-    if (!response.ok) {
-      // Try to get error message from response body
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `API Error: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    // Re-throw to let React Query or calling code handle it
-    throw error;
+  const response = await fetch(`${BASE_URL}${endpoint}`);
+  
+  if (!response.ok) {
+    // Try to get error message from response body
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `API Error: ${response.status}`);
   }
+  
+  return await response.json();
 };
 
 /**
