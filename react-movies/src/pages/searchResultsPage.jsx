@@ -56,7 +56,7 @@ const SearchResultsPage = () => {
         </Grid>
         <Grid size={12}>
           <Box sx={{ p: 4, textAlign: "center" }}>
-            <Typography variant="h6" color="text.secondary">
+            <Typography variant="h6" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
               Please enter a search query
             </Typography>
           </Box>
@@ -76,10 +76,10 @@ const SearchResultsPage = () => {
         </Grid>
         <Grid size={12}>
           <Box sx={{ p: 4, textAlign: "center" }}>
-            <Typography variant="h6" color="text.secondary">
+            <Typography variant="h6" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
               No results found for "{query}"
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" sx={{ mt: 1, color: "rgba(255, 255, 255, 0.5)" }}>
               Try searching with different keywords
             </Typography>
           </Box>
@@ -104,9 +104,9 @@ const SearchResultsPage = () => {
             variant="h6"
             component="h2"
             fontWeight={600}
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, color: "white" }}
           >
-            Movies ({movies.length})
+            🎬 Movies ({movies.length})
           </Typography>
           <Grid container spacing={2}>
             {movies.map((movie) => (
@@ -127,9 +127,9 @@ const SearchResultsPage = () => {
             variant="h6"
             component="h2"
             fontWeight={600}
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, color: "white" }}
           >
-            People ({people.length})
+            🎭 People ({people.length})
           </Typography>
           <Grid container spacing={2}>
             {people.map((person) => (

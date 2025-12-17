@@ -105,7 +105,7 @@ const PageHeader = ({ title, movie, showNavigation = true }) => {
 
   return (
     <Paper
-      elevation={1}
+      elevation={3}
       sx={{
         display: "flex",
         alignItems: "center",
@@ -114,12 +114,9 @@ const PageHeader = ({ title, movie, showNavigation = true }) => {
         py: { xs: 1.5, md: 2 },
         // I remove bottom margin for movie details to allow seamless connection with content below
         mb: hasMovieDetails ? 0 : 3,
-        // I apply a subtle gradient background for movie headers to distinguish them visually
-        // Simple headers get the standard paper background
-        background: (theme) =>
-          hasMovieDetails
-            ? `linear-gradient(135deg, ${theme.palette.primary.main}15 0%, ${theme.palette.secondary.main}15 100%)`
-            : theme.palette.background.paper,
+        // Solid background for visibility on dark theme
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        backdropFilter: "blur(10px)",
       }}
     >
       {/* I only render navigation buttons if showNavigation is true */}

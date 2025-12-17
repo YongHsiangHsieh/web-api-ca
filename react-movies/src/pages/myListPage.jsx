@@ -90,10 +90,10 @@ const MyListPage = () => {
           <Box sx={{ p: 4, textAlign: "center" }}>
             {/* I display an empty state message when the user has no movies in either list,
                 encouraging them to start building their collections */}
-            <Typography variant="h6" color="text.secondary">
+            <Typography variant="h6" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
               Your list is empty
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" sx={{ mt: 1, color: "rgba(255, 255, 255, 0.5)" }}>
               Start adding movies to your favorites or must-watch list
             </Typography>
           </Box>
@@ -106,7 +106,7 @@ const MyListPage = () => {
             variant="h6"
             component="h2"
             fontWeight={600}
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, color: "white" }}
           >
             ❤️ Favorite Movies ({favoriteMovies.length})
           </Typography>
@@ -136,7 +136,7 @@ const MyListPage = () => {
             variant="h6"
             component="h2"
             fontWeight={600}
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, color: "white" }}
           >
             📺 Must Watch ({mustWatchMovies.length})
           </Typography>
