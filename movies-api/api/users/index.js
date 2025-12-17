@@ -2,6 +2,7 @@ import express from 'express';
 import User from './userModel';
 import asyncHandler from 'express-async-handler';
 import jwt from 'jsonwebtoken';
+import authenticate from '../../authenticate';
 
 const router = express.Router(); // eslint-disable-line
 
@@ -62,5 +63,116 @@ async function authenticateUser(req, res) {
         res.status(401).json({ success: false, msg: 'Wrong password.' });
     }
 }
+
+// ============================================
+// FAVORITES ENDPOINTS
+// All endpoints require authentication
+// ============================================
+
+/**
+ * GET /api/users/favorites
+ * 
+ * Returns the authenticated user's list of favorite movie IDs.
+ * Requires valid JWT token in Authorization header.
+ * 
+ * @returns {Object} { success: true, favorites: [movieId1, movieId2, ...] }
+ */
+router.get('/favorites', authenticate, asyncHandler(async (req, res) => {
+    // req.user is set by authenticate middleware
+    // It contains the full user document from MongoDB
+    const user = req.user;
+    
+    res.status(200).json({
+        success: true,
+        favorites: user.favorites || []
+    });
+}));
+
+/**
+ * POST /api/users/favorites/:movieId
+ * 
+ * Adds a movie to the authenticated user's favorites list.
+ * If the movie is already in favorites, returns success without duplicating.
+ * 
+ * @param {number} movieId - TMDB movie ID (from URL parameter)
+ * @returns {Object} { success: true, msg: string, favorites: [...] }
+ */
+router.post('/favorites/:movieId', authenticate, asyncHandler(async (req, res) => {
+    const movieId = parseInt(req.params.movieId);
+    
+    // Validate that movieId is a valid number
+    if (isNaN(movieId)) {
+        return res.status(400).json({
+            success: false,
+            msg: 'Invalid movie ID. Must be a number.'
+        });
+    }
+    
+    const user = req.user;
+    
+    // Check if movie is already in favorites (prevent duplicates)
+    if (user.favorites.includes(movieId)) {
+        return res.status(200).json({
+            success: true,
+            msg: 'Movie is already in favorites.',
+            favorites: user.favorites
+        });
+    }
+    
+    // Add movie to favorites and save
+    user.favorites.push(movieId);
+    await user.save();
+    
+    res.status(201).json({
+        success: true,
+        msg: 'Movie added to favorites.',
+        favorites: user.favorites
+    });
+}));
+
+/**
+ * DELETE /api/users/favorites/:movieId
+ * 
+ * Removes a movie from the authenticated user's favorites list.
+ * If the movie is not in favorites, returns success (idempotent).
+ * 
+ * @param {number} movieId - TMDB movie ID (from URL parameter)
+ * @returns {Object} { success: true, msg: string, favorites: [...] }
+ */
+router.delete('/favorites/:movieId', authenticate, asyncHandler(async (req, res) => {
+    const movieId = parseInt(req.params.movieId);
+    
+    // Validate that movieId is a valid number
+    if (isNaN(movieId)) {
+        return res.status(400).json({
+            success: false,
+            msg: 'Invalid movie ID. Must be a number.'
+        });
+    }
+    
+    const user = req.user;
+    
+    // Find and remove the movie from favorites
+    const index = user.favorites.indexOf(movieId);
+    
+    if (index === -1) {
+        // Movie not in favorites - return success anyway (idempotent)
+        return res.status(200).json({
+            success: true,
+            msg: 'Movie was not in favorites.',
+            favorites: user.favorites
+        });
+    }
+    
+    // Remove movie from favorites and save
+    user.favorites.splice(index, 1);
+    await user.save();
+    
+    res.status(200).json({
+        success: true,
+        msg: 'Movie removed from favorites.',
+        favorites: user.favorites
+    });
+}));
 
 export default router;
