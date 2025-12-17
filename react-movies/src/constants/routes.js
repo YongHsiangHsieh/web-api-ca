@@ -66,6 +66,7 @@
  *
  * Route structure:
  * - HOME: Landing/home page
+ * - AUTH: Authentication pages (login, signup)
  * - MOVIES: All movie-related pages (lists, details)
  * - REVIEWS: User reviews and review details
  * - ACTORS: Actor/person detail pages
@@ -74,6 +75,9 @@
  * @constant
  * @type {Object}
  * @property {string} HOME - Home page route
+ * @property {Object} AUTH - Authentication routes
+ * @property {string} AUTH.LOGIN - Login page
+ * @property {string} AUTH.SIGNUP - Signup/registration page
  * @property {Object} MOVIES - Movie-related routes
  * @property {string} MOVIES.MY_LIST - User's favorite/saved movies
  * @property {string} MOVIES.UPCOMING - Upcoming movies page
@@ -92,6 +96,12 @@
 export const ROUTES = {
   // Home page
   HOME: "/",
+
+  // Authentication pages
+  AUTH: {
+    LOGIN: "/login",
+    SIGNUP: "/signup",
+  },
 
   // Movie-related pages
   MOVIES: {
