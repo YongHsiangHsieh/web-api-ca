@@ -19,11 +19,12 @@
  *    - If user is not authenticated, only local state is used
  *    - This gives instant feedback while ensuring data persistence
  *
- * 3. Auth Integration
+ * 3. Auth Integration (Automatic)
  *    - I access AuthContext to get the token for API calls
  *    - When authenticated, add/remove operations sync to backend
- *    - loadUserLists() loads data from backend on login
- *    - clearLists() resets state on logout
+ *    - useEffect automatically loads lists when user logs in or session is restored
+ *    - useEffect automatically clears lists when user logs out
+ *    - No manual calls needed from AuthContext - fully decoupled!
  *
  * 4. Collection Storage
  *    - Favorites and must-watch are stored as arrays of movie IDs
@@ -58,7 +59,7 @@
  * @module contexts/moviesContext
  */
 
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "./authContext";
 import {
   getFavorites,
@@ -258,6 +259,45 @@ const MoviesContextProvider = ({ children }) => {
     setMustWatch([]);
     setMyReviews({});
   };
+
+  // ============================================
+  // AUTH STATE WATCHER
+  // Automatically load/clear lists based on auth state
+  // ============================================
+
+  // I use a ref to track the previous auth state
+  // This helps distinguish between login and initial mount
+  const prevAuthRef = useRef(isAuthenticated);
+
+  /**
+   * Effect: Sync lists with backend when auth state changes.
+   *
+   * This effect watches for changes in authentication state:
+   * - When user logs in (isAuthenticated becomes true): Load lists from backend
+   * - When user logs out (isAuthenticated becomes false): Clear all lists
+   * - On initial mount with valid token: Load lists (session restoration)
+   *
+   * I use a ref to track previous state to avoid unnecessary API calls.
+   */
+  useEffect(() => {
+    const wasAuthenticated = prevAuthRef.current;
+
+    if (isAuthenticated && token) {
+      // User is now authenticated
+      // Load lists if:
+      // 1. User just logged in (wasAuthenticated was false)
+      // 2. Session was restored on mount (first render with valid token)
+      if (!wasAuthenticated || favorites.length === 0) {
+        loadUserLists(token);
+      }
+    } else if (!isAuthenticated && wasAuthenticated) {
+      // User just logged out (was authenticated, now isn't)
+      clearLists();
+    }
+
+    // Update the ref for next render
+    prevAuthRef.current = isAuthenticated;
+  }, [isAuthenticated, token]); // Re-run when auth state changes
 
   // ============================================
   // REVIEWS HANDLER
