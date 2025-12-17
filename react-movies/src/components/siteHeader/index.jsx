@@ -35,13 +35,19 @@
  *    - keepMounted prop keeps menu in DOM for better performance on re-opens
  *    - Clicking any menu item closes the menu and navigates
  *
- * 6. Accessibility Features
+ * 6. Authentication UI
+ *    - When not logged in: Show Login and Sign Up buttons
+ *    - When logged in: Show username with dropdown containing Logout option
+ *    - Auth state is read from AuthContext
+ *    - Logout is immediate (no confirmation dialog)
+ *
+ * 7. Accessibility Features
  *    - All interactive elements have aria-labels for screen readers
  *    - Hamburger menu has proper ARIA attributes (controls, haspopup, expanded)
  *    - Minimum touch target sizes (48px) for mobile usability
  *    - Semantic HTML with h1 for the site title
  *
- * 7. Navigation Flow
+ * 8. Navigation Flow
  *    - I use React Router's navigate function for client-side routing
  *    - No page reloads - smooth SPA navigation experience
  *    - Routes are imported from constants for consistency
@@ -52,7 +58,7 @@
  * <SiteHeader />
  */
 
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -62,11 +68,13 @@ import Box from "@mui/material/Box";
 import MenuIcon from "@mui/icons-material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
+import Divider from "@mui/material/Divider";
 import { useNavigate } from "react-router";
 import { styled } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { ROUTES } from "../../constants/routes";
+import { AuthContext } from "../../contexts/authContext";
 
 /**
  * Offset component to add spacing below the fixed AppBar.
@@ -93,8 +101,14 @@ const SiteHeader = () => {
   // When null, the menu is closed; when set, the menu opens anchored to this element
   const [anchorEl, setAnchorEl] = useState(null);
 
+  // I track the anchor element for the user dropdown menu separately
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
+
   // I convert anchorEl to a boolean to easily check if the menu is open
   const open = Boolean(anchorEl);
+
+  // I check if user dropdown is open
+  const userMenuOpen = Boolean(userMenuAnchor);
 
   // I access the theme to use with media queries
   const theme = useTheme();
@@ -105,6 +119,9 @@ const SiteHeader = () => {
 
   // I use navigate for client-side routing without page reloads
   const navigate = useNavigate();
+
+  // I access auth state from context
+  const { isAuthenticated, user, logout } = useContext(AuthContext);
 
   /**
    * Navigation menu options.
@@ -151,6 +168,35 @@ const SiteHeader = () => {
    */
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
+  };
+
+  /**
+   * Handles opening the user dropdown menu.
+   *
+   * @param {Event} event - Click event from the username button
+   */
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  /**
+   * Handles closing the user dropdown menu.
+   */
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  /**
+   * Handles user logout.
+   *
+   * I call the logout function from AuthContext and close the menu.
+   * The logout is immediate without confirmation as per user preference.
+   */
+  const handleLogout = () => {
+    handleUserMenuClose();
+    logout();
+    // Navigate to home after logout
+    navigate(ROUTES.HOME);
   };
 
   return (
@@ -236,6 +282,31 @@ const SiteHeader = () => {
                     {opt.label}
                   </MenuItem>
                 ))}
+
+                {/* Divider to separate navigation from auth actions */}
+                <Divider sx={{ my: 1 }} />
+
+                {/* Auth actions in mobile menu */}
+                {isAuthenticated ? (
+                  <>
+                    {/* Show username (non-clickable, just for display) */}
+                    <MenuItem disabled sx={{ opacity: 0.7 }}>
+                      👤 {user?.username}
+                    </MenuItem>
+                    <MenuItem onClick={handleLogout}>
+                      Logout
+                    </MenuItem>
+                  </>
+                ) : (
+                  <>
+                    <MenuItem onClick={() => handleMenuSelect(ROUTES.AUTH.LOGIN)}>
+                      Login
+                    </MenuItem>
+                    <MenuItem onClick={() => handleMenuSelect(ROUTES.AUTH.SIGNUP)}>
+                      Sign Up
+                    </MenuItem>
+                  </>
+                )}
               </Menu>
             </>
           ) : (
@@ -254,6 +325,90 @@ const SiteHeader = () => {
                   {opt.label}
                 </Button>
               ))}
+
+              {/* Auth section - conditionally render based on auth state */}
+              <Box sx={{ ml: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                {isAuthenticated ? (
+                  <>
+                    {/* Username button with dropdown */}
+                    <Button
+                      color="inherit"
+                      onClick={handleUserMenuOpen}
+                      aria-label="User menu"
+                      aria-controls="user-menu"
+                      aria-haspopup="true"
+                      aria-expanded={userMenuOpen ? "true" : "false"}
+                      sx={{
+                        minHeight: 48,
+                        px: 2,
+                        textTransform: "none", // Keep username as-is, no uppercase
+                        fontWeight: 600,
+                      }}
+                    >
+                      👤 {user?.username}
+                    </Button>
+
+                    {/* User dropdown menu */}
+                    <Menu
+                      id="user-menu"
+                      anchorEl={userMenuAnchor}
+                      anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "right",
+                      }}
+                      keepMounted
+                      transformOrigin={{
+                        vertical: "top",
+                        horizontal: "right",
+                      }}
+                      open={userMenuOpen}
+                      onClose={handleUserMenuClose}
+                    >
+                      <MenuItem onClick={handleLogout}>
+                        Logout
+                      </MenuItem>
+                    </Menu>
+                  </>
+                ) : (
+                  <>
+                    {/* Login button - outlined style */}
+                    <Button
+                      variant="outlined"
+                      onClick={() => navigate(ROUTES.AUTH.LOGIN)}
+                      aria-label="Navigate to Login"
+                      sx={{
+                        minHeight: 40,
+                        color: "white",
+                        borderColor: "rgba(255, 255, 255, 0.5)",
+                        "&:hover": {
+                          borderColor: "white",
+                          backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        },
+                      }}
+                    >
+                      Login
+                    </Button>
+
+                    {/* Sign Up button - contained style for emphasis */}
+                    <Button
+                      variant="contained"
+                      onClick={() => navigate(ROUTES.AUTH.SIGNUP)}
+                      aria-label="Navigate to Sign Up"
+                      sx={{
+                        minHeight: 40,
+                        backgroundColor: "white",
+                        color: "primary.main",
+                        fontWeight: 600,
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        },
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </>
+                )}
+              </Box>
             </>
           )}
         </Toolbar>
