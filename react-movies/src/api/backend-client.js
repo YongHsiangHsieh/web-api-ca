@@ -65,6 +65,99 @@ export const backendFetch = async (endpoint) => {
   return await response.json();
 };
 
+// ============================================
+// AUTHENTICATION API FUNCTIONS
+// These handle user signup and login
+// ============================================
+
+/**
+ * Registers a new user account
+ * 
+ * Sends a POST request to create a new user in the database.
+ * The backend validates:
+ * - Username: 3-20 characters, alphanumeric and underscore only
+ * - Password: 8+ characters, must include letter, digit, and special character
+ * 
+ * @async
+ * @function
+ * @param {string} username - The desired username (3-20 chars, alphanumeric + underscore)
+ * @param {string} password - The password (8+ chars, letter + digit + special char)
+ * 
+ * @returns {Promise<string>} Success message from the backend
+ * 
+ * @throws {Error} Throws if registration fails (e.g., username taken, invalid password)
+ *                 Error message contains the specific reason from backend
+ * 
+ * @example
+ * try {
+ *   const message = await signup('john_doe', 'SecurePass123!');
+ *   console.log(message); // "User successfully created."
+ * } catch (error) {
+ *   console.log(error.message); // "Username must be 3-20 characters..."
+ * }
+ */
+export const signup = async (username, password) => {
+  const response = await fetch(`${BASE_URL}/users?action=register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  const data = await response.json();
+
+  // Check if the backend returned success: false
+  if (!data.success) {
+    throw new Error(data.msg || 'Registration failed');
+  }
+
+  return data.msg;
+};
+
+/**
+ * Authenticates a user and returns a JWT token
+ * 
+ * Sends a POST request to verify credentials and receive an authentication token.
+ * The token should be stored and included in subsequent authenticated requests.
+ * 
+ * @async
+ * @function
+ * @param {string} username - The user's username
+ * @param {string} password - The user's password
+ * 
+ * @returns {Promise<string>} JWT token for authenticated requests
+ * 
+ * @throws {Error} Throws if login fails (e.g., wrong password, user not found)
+ *                 Error message contains the specific reason from backend
+ * 
+ * @example
+ * try {
+ *   const token = await login('john_doe', 'SecurePass123!');
+ *   localStorage.setItem('token', token);
+ * } catch (error) {
+ *   console.log(error.message); // "Authentication failed. User not found."
+ * }
+ */
+export const login = async (username, password) => {
+  const response = await fetch(`${BASE_URL}/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  const data = await response.json();
+
+  // Check if the backend returned success: false
+  if (!data.success) {
+    throw new Error(data.msg || 'Login failed');
+  }
+
+  return data.token;
+};
+
 /**
  * Helper functions for extracting data from React Query's queryKey
  * 
