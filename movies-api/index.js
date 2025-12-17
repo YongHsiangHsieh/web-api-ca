@@ -5,7 +5,6 @@ import moviesRouter from './api/movies';
 import peopleRouter from './api/people';
 import './db';
 import cors from 'cors';
-import authenticate from './authenticate';
 
 dotenv.config();
 
