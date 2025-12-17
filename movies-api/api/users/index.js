@@ -24,6 +24,16 @@ router.post('/', asyncHandler(async (req, res) => {
 }));
 
 async function registerUser(req, res) {
+    // Username validation regex: 3-20 characters, alphanumeric and underscore only
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    
+    if (!usernameRegex.test(req.body.username)) {
+        return res.status(400).json({ 
+            success: false, 
+            msg: 'Username must be 3-20 characters long and contain only letters, numbers, and underscores.' 
+        });
+    }
+
     // Password validation regex
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
     
@@ -47,7 +57,7 @@ async function authenticateUser(req, res) {
     const isMatch = await user.comparePassword(req.body.password);
     if (isMatch) {
         const token = jwt.sign({ username: user.username }, process.env.SECRET);
-        res.status(200).json({ success: true, token: 'BEARER ' + token });
+        res.status(200).json({ success: true, token: token });
     } else {
         res.status(401).json({ success: false, msg: 'Wrong password.' });
     }
