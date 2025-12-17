@@ -13,71 +13,61 @@
  *    - Still provides clean separation of state management
  *    - Perfect for this use case with moderate state needs
  *
- * 2. Collection Storage
- *    - Favorites and must-watch are stored as arrays
- *    - I use these for lists of movies, making iteration straightforward
+ * 2. Backend Sync with Optimistic Updates
+ *    - Local state is updated immediately for responsive UI
+ *    - Backend API is called in background to persist data
+ *    - If user is not authenticated, only local state is used
+ *    - This gives instant feedback while ensuring data persistence
+ *
+ * 3. Auth Integration
+ *    - I access AuthContext to get the token for API calls
+ *    - When authenticated, add/remove operations sync to backend
+ *    - loadUserLists() loads data from backend on login
+ *    - clearLists() resets state on logout
+ *
+ * 4. Collection Storage
+ *    - Favorites and must-watch are stored as arrays of movie IDs
  *    - Arrays make it easy to map over and display collections
  *
- * 3. Reviews Storage
+ * 5. Reviews Storage
  *    - I store reviews as an object keyed by movie ID
  *    - This makes lookups O(1) - instant checking if a movie has a review
  *    - Object structure: { movieId: reviewObject, movieId: reviewObject, ... }
- *    - Different pattern from collections to optimize retrieval
- *
- * 4. Reusable Handlers
- *    - I use createCollectionHandlers utility for favorites and must-watch
- *    - Both collections share the same add/remove logic
- *    - This reduces code duplication and ensures consistency
- *    - Handlers are pre-bound to their respective state/setState pairs
- *
- * 5. Review Management
- *    - I implement addReview with a custom handler since it needs object updates
- *    - Using spread syntax (...prev) to create immutable updates
- *    - This pattern is more efficient than array operations for movie-by-ID lookup
- *
- * 6. Provider Pattern
- *    - I export the context and provider separately
- *    - Context: For using useContext in components
- *    - Provider: For wrapping the app tree at the root level
- *    - Clean separation of concerns
  *
  * Global State Structure:
  * {
  *   // Favorites
- *   favorites: [movie1, movie2, ...],
+ *   favorites: [movieId1, movieId2, ...],
  *   addToFavorites: (movie) => void,
- *   removeFromFavorites: (movieId) => void,
+ *   removeFromFavorites: (movie) => void,
  *
  *   // Must Watch
- *   mustWatch: [movie1, movie2, ...],
+ *   mustWatch: [movieId1, movieId2, ...],
  *   addToMustWatch: (movie) => void,
- *   removeFromMustWatch: (movieId) => void,
+ *   removeFromMustWatch: (movie) => void,
+ *
+ *   // List Management (for auth integration)
+ *   loadUserLists: (token) => Promise<void>,
+ *   clearLists: () => void,
  *
  *   // Reviews
  *   addReview: (movie, review) => void,
  *   myReviews: { movieId: review, movieId: review, ... }
  * }
  *
- * Usage Pattern:
- * - Wrap app with <MoviesContextProvider>
- * - Use useContext(MoviesContext) in components
- * - Call functions to add/remove/review movies
- *
  * @module contexts/moviesContext
- * @example
- * // In main App component
- * <MoviesContextProvider>
- *   <App />
- * </MoviesContextProvider>
- *
- * @example
- * // In any child component
- * const context = useContext(MoviesContext);
- * context.addToFavorites(movie);
  */
 
-import React, { useState } from "react";
-import { createCollectionHandlers } from "../utils/collections";
+import React, { useState, useContext } from "react";
+import { AuthContext } from "./authContext";
+import {
+  getFavorites,
+  addFavorite,
+  removeFavorite,
+  getMustWatch,
+  addToMustWatch as apiAddToMustWatch,
+  removeFromMustWatch as apiRemoveFromMustWatch,
+} from "../api/backend-client";
 
 /**
  * React Context for global movie data.
@@ -95,44 +85,183 @@ export const MoviesContext = React.createContext(null);
  * Context provider component for movies data.
  *
  * I manage three separate collections here:
- * 1. Favorites - Array of favorite movies
- * 2. Must Watch - Array of movies to watch later
+ * 1. Favorites - Array of favorite movie IDs
+ * 2. Must Watch - Array of movie IDs to watch later
  * 3. My Reviews - Object of user-written reviews keyed by movie ID
  *
- * The provider handles state initialization, handler creation, and context
- * value assembly. It wraps the application tree to provide global access.
+ * The provider handles state initialization, backend synchronization,
+ * and context value assembly. It wraps the application tree to provide global access.
  *
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Child components to wrap
  * @returns {JSX.Element} A Context Provider wrapping the children
  */
 const MoviesContextProvider = ({ children }) => {
-  // I maintain favorites as an array for easy iteration and display
+  // I get auth state to determine if we should sync with backend
+  const { token, isAuthenticated } = useContext(AuthContext);
+
+  // I maintain favorites as an array of movie IDs
   const [favorites, setFavorites] = useState([]);
 
-  // I maintain must-watch as an array with the same interface as favorites
+  // I maintain must-watch as an array of movie IDs
   const [mustWatch, setMustWatch] = useState([]);
 
   // I maintain reviews as an object keyed by movieId for O(1) lookup
-  // Structure: { movieId: reviewObject, movieId: reviewObject, ... }
   const [myReviews, setMyReviews] = useState({});
 
-  /**
-   * Handlers for the favorites collection.
-   *
-   * I use the createCollectionHandlers utility to generate add and remove
-   * functions for the favorites. This keeps the code DRY and ensures
-   * consistent collection management across all lists.
-   */
-  const favoritesHandlers = createCollectionHandlers(favorites, setFavorites);
+  // ============================================
+  // FAVORITES HANDLERS
+  // ============================================
 
   /**
-   * Handlers for the must-watch collection.
+   * Adds a movie to favorites.
    *
-   * I use the same utility to create handlers for must-watch, giving it
-   * the same API as favorites even though they're separate collections.
+   * I use optimistic updates: the UI updates immediately, and the backend
+   * sync happens in the background. If the user is not authenticated,
+   * only local state is updated.
+   *
+   * @param {Object} movie - Movie object with id property
    */
-  const mustWatchHandlers = createCollectionHandlers(mustWatch, setMustWatch);
+  const addToFavorites = async (movie) => {
+    const movieId = movie.id;
+
+    // Optimistic update - update UI immediately
+    setFavorites((prev) => {
+      if (prev.includes(movieId)) {
+        return prev; // Already in favorites
+      }
+      return [...prev, movieId];
+    });
+
+    // Sync to backend if authenticated
+    if (isAuthenticated && token) {
+      try {
+        await addFavorite(token, movieId);
+      } catch (error) {
+        console.error("Failed to sync favorite to backend:", error);
+        // Note: We don't revert the UI here for simplicity
+        // In production, you might want to show an error toast
+      }
+    }
+  };
+
+  /**
+   * Removes a movie from favorites.
+   *
+   * @param {Object} movie - Movie object with id property
+   */
+  const removeFromFavorites = async (movie) => {
+    const movieId = movie.id;
+
+    // Optimistic update - update UI immediately
+    setFavorites((prev) => prev.filter((id) => id !== movieId));
+
+    // Sync to backend if authenticated
+    if (isAuthenticated && token) {
+      try {
+        await removeFavorite(token, movieId);
+      } catch (error) {
+        console.error("Failed to sync favorite removal to backend:", error);
+      }
+    }
+  };
+
+  // ============================================
+  // MUST-WATCH HANDLERS
+  // ============================================
+
+  /**
+   * Adds a movie to must-watch list.
+   *
+   * @param {Object} movie - Movie object with id property
+   */
+  const addToMustWatch = async (movie) => {
+    const movieId = movie.id;
+
+    // Optimistic update - update UI immediately
+    setMustWatch((prev) => {
+      if (prev.includes(movieId)) {
+        return prev; // Already in must-watch
+      }
+      return [...prev, movieId];
+    });
+
+    // Sync to backend if authenticated
+    if (isAuthenticated && token) {
+      try {
+        await apiAddToMustWatch(token, movieId);
+      } catch (error) {
+        console.error("Failed to sync must-watch to backend:", error);
+      }
+    }
+  };
+
+  /**
+   * Removes a movie from must-watch list.
+   *
+   * @param {Object} movie - Movie object with id property
+   */
+  const removeFromMustWatch = async (movie) => {
+    const movieId = movie.id;
+
+    // Optimistic update - update UI immediately
+    setMustWatch((prev) => prev.filter((id) => id !== movieId));
+
+    // Sync to backend if authenticated
+    if (isAuthenticated && token) {
+      try {
+        await apiRemoveFromMustWatch(token, movieId);
+      } catch (error) {
+        console.error("Failed to sync must-watch removal to backend:", error);
+      }
+    }
+  };
+
+  // ============================================
+  // LIST MANAGEMENT (for auth integration)
+  // ============================================
+
+  /**
+   * Loads user's lists from the backend.
+   *
+   * I call this when a user logs in to restore their saved lists.
+   * The token parameter allows this to be called from AuthContext
+   * without circular dependency issues.
+   *
+   * @param {string} userToken - JWT token for authentication
+   */
+  const loadUserLists = async (userToken) => {
+    try {
+      // Fetch both lists in parallel for better performance
+      const [favoritesData, mustWatchData] = await Promise.all([
+        getFavorites(userToken),
+        getMustWatch(userToken),
+      ]);
+
+      // Update local state with backend data
+      setFavorites(favoritesData || []);
+      setMustWatch(mustWatchData || []);
+    } catch (error) {
+      console.error("Failed to load user lists from backend:", error);
+      // Keep existing local state if load fails
+    }
+  };
+
+  /**
+   * Clears all lists.
+   *
+   * I call this when a user logs out to reset the state.
+   * This ensures the next user doesn't see the previous user's data.
+   */
+  const clearLists = () => {
+    setFavorites([]);
+    setMustWatch([]);
+    setMyReviews({});
+  };
+
+  // ============================================
+  // REVIEWS HANDLER
+  // ============================================
 
   /**
    * Adds a review for a movie.
@@ -141,13 +270,13 @@ const MoviesContextProvider = ({ children }) => {
    * quick lookup of reviews by movie ID and makes it easy to update
    * or replace a review for a specific movie.
    *
+   * Note: Reviews are currently stored locally only.
+   * Backend persistence could be added later.
+   *
    * @param {Object} movie - Movie object containing the movie ID
-   * @param {number} movie.id - Movie ID used as the key
    * @param {Object} review - Review object containing review data
    */
   const addReview = (movie, review) => {
-    // I use object spread to create an immutable update
-    // This is the React best practice for updating objects in state
     setMyReviews((prev) => ({
       ...prev,
       [movie.id]: review,
@@ -159,13 +288,17 @@ const MoviesContextProvider = ({ children }) => {
       value={{
         // Favorites collection and handlers
         favorites,
-        addToFavorites: favoritesHandlers.add,
-        removeFromFavorites: favoritesHandlers.remove,
+        addToFavorites,
+        removeFromFavorites,
 
         // Must-watch collection and handlers
         mustWatch,
-        addToMustWatch: mustWatchHandlers.add,
-        removeFromMustWatch: mustWatchHandlers.remove,
+        addToMustWatch,
+        removeFromMustWatch,
+
+        // List management (for auth integration)
+        loadUserLists,
+        clearLists,
 
         // Reviews collection and handler
         addReview,
