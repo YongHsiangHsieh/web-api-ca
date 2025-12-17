@@ -175,4 +175,113 @@ router.delete('/favorites/:movieId', authenticate, asyncHandler(async (req, res)
     });
 }));
 
+// ============================================
+// MUST-WATCH ENDPOINTS
+// All endpoints require authentication
+// ============================================
+
+/**
+ * GET /api/users/mustwatch
+ * 
+ * Returns the authenticated user's list of must-watch movie IDs.
+ * Requires valid JWT token in Authorization header.
+ * 
+ * @returns {Object} { success: true, mustWatch: [movieId1, movieId2, ...] }
+ */
+router.get('/mustwatch', authenticate, asyncHandler(async (req, res) => {
+    const user = req.user;
+    
+    res.status(200).json({
+        success: true,
+        mustWatch: user.mustWatch || []
+    });
+}));
+
+/**
+ * POST /api/users/mustwatch/:movieId
+ * 
+ * Adds a movie to the authenticated user's must-watch list.
+ * If the movie is already in must-watch, returns success without duplicating.
+ * 
+ * @param {number} movieId - TMDB movie ID (from URL parameter)
+ * @returns {Object} { success: true, msg: string, mustWatch: [...] }
+ */
+router.post('/mustwatch/:movieId', authenticate, asyncHandler(async (req, res) => {
+    const movieId = parseInt(req.params.movieId);
+    
+    // Validate that movieId is a valid number
+    if (isNaN(movieId)) {
+        return res.status(400).json({
+            success: false,
+            msg: 'Invalid movie ID. Must be a number.'
+        });
+    }
+    
+    const user = req.user;
+    
+    // Check if movie is already in must-watch (prevent duplicates)
+    if (user.mustWatch.includes(movieId)) {
+        return res.status(200).json({
+            success: true,
+            msg: 'Movie is already in must-watch list.',
+            mustWatch: user.mustWatch
+        });
+    }
+    
+    // Add movie to must-watch and save
+    user.mustWatch.push(movieId);
+    await user.save();
+    
+    res.status(201).json({
+        success: true,
+        msg: 'Movie added to must-watch list.',
+        mustWatch: user.mustWatch
+    });
+}));
+
+/**
+ * DELETE /api/users/mustwatch/:movieId
+ * 
+ * Removes a movie from the authenticated user's must-watch list.
+ * If the movie is not in must-watch, returns success (idempotent).
+ * 
+ * @param {number} movieId - TMDB movie ID (from URL parameter)
+ * @returns {Object} { success: true, msg: string, mustWatch: [...] }
+ */
+router.delete('/mustwatch/:movieId', authenticate, asyncHandler(async (req, res) => {
+    const movieId = parseInt(req.params.movieId);
+    
+    // Validate that movieId is a valid number
+    if (isNaN(movieId)) {
+        return res.status(400).json({
+            success: false,
+            msg: 'Invalid movie ID. Must be a number.'
+        });
+    }
+    
+    const user = req.user;
+    
+    // Find and remove the movie from must-watch
+    const index = user.mustWatch.indexOf(movieId);
+    
+    if (index === -1) {
+        // Movie not in must-watch - return success anyway (idempotent)
+        return res.status(200).json({
+            success: true,
+            msg: 'Movie was not in must-watch list.',
+            mustWatch: user.mustWatch
+        });
+    }
+    
+    // Remove movie from must-watch and save
+    user.mustWatch.splice(index, 1);
+    await user.save();
+    
+    res.status(200).json({
+        success: true,
+        msg: 'Movie removed from must-watch list.',
+        mustWatch: user.mustWatch
+    });
+}));
+
 export default router;
