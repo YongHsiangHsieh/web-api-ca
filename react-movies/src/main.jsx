@@ -16,8 +16,12 @@ import SiteHeader from "./components/siteHeader";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import MoviesContextProvider from "./contexts/moviesContext";
+import AuthContextProvider from "./contexts/authContext";
 import AddMovieReviewPage from "./pages/addMovieReviewPage";
 import UpcomingMoviesPage from "./pages/upcomingMoviesPage";
+import LoginPage from "./pages/loginPage";
+import SignupPage from "./pages/signupPage";
+import ProtectedRoute from "./components/protectedRoute";
 import { ROUTES } from "./constants/routes";
 import theme from "./theme";
 
@@ -27,7 +31,8 @@ import theme from "./theme";
  * I configure and initialize all the essential providers, context managers, and routing
  * infrastructure that the application needs to function. This includes React Query for
  * data fetching and caching, Material-UI theming for consistent styling, React Router for
- * navigation, and a custom MoviesContext for managing user movie collections.
+ * navigation, a custom MoviesContext for managing user movie collections, and AuthContext
+ * for user authentication.
  */
 
 /**
@@ -58,10 +63,20 @@ const queryClient = new QueryClient({
  * 2. ThemeProvider - Applies Material-UI theme for consistent styling
  * 3. CssBaseline - Normalizes CSS across browsers
  * 4. BrowserRouter - Enables React Router functionality
- * 5. SiteHeader - Global header component visible on all pages
- * 6. MoviesContextProvider - Makes user movie collections available everywhere
- * 7. Routes - Defines all application routes and their components
- * 8. ReactQueryDevtools - Development tool for debugging React Query (only in dev)
+ * 5. AuthContextProvider - Makes authentication state available everywhere
+ * 6. SiteHeader - Global header component visible on all pages
+ * 7. MoviesContextProvider - Makes user movie collections available everywhere
+ * 8. Routes - Defines all application routes and their components
+ * 9. ReactQueryDevtools - Development tool for debugging React Query (only in dev)
+ *
+ * Provider Order Notes:
+ * - AuthContextProvider is inside BrowserRouter so it can use navigation
+ * - AuthContextProvider wraps SiteHeader so header can access auth state
+ * - MoviesContextProvider is inside so it can potentially use auth state in future
+ *
+ * Protected Routes:
+ * - /movies/my-list (MyListPage) - requires authentication
+ * - /reviews/form (AddMovieReviewPage) - requires authentication
  *
  * @returns {React.ReactElement} The complete application component with all providers and routes
  */
@@ -71,47 +86,68 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <BrowserRouter>
-          <SiteHeader />
-          <MoviesContextProvider>
-            {/* I define all application routes here. Each route maps a path to a page component.
-                Routes are organized by feature (movies, reviews, actors, search) for clarity. */}
-            <Routes>
-              <Route path={ROUTES.MOVIES.MY_LIST} element={<MyListPage />} />
-              <Route
-                path={ROUTES.MOVIES.UPCOMING}
-                element={<UpcomingMoviesPage />}
-              />
-              <Route
-                path={ROUTES.MOVIES.POPULAR}
-                element={<PopularMoviesPage />}
-              />
-              <Route
-                path={ROUTES.MOVIES.TOP_RATED}
-                element={<TopRatedMoviesPage />}
-              />
-              <Route
-                path={ROUTES.MOVIES.NOW_PLAYING}
-                element={<NowPlayingMoviesPage />}
-              />
-              <Route path={ROUTES.REVIEWS.VIEW} element={<MovieReviewPage />} />
-              <Route path={ROUTES.MOVIES.DETAILS} element={<MoviePage />} />
-              <Route
-                path={ROUTES.ACTORS.DETAILS}
-                element={<ActorDetailsPage />}
-              />
-              <Route
-                path={ROUTES.SEARCH.RESULTS}
-                element={<SearchResultsPage />}
-              />
-              <Route path={ROUTES.HOME} element={<HomePage />} />
-              <Route
-                path={ROUTES.REVIEWS.FORM}
-                element={<AddMovieReviewPage />}
-              />
-              {/* I redirect any unmatched routes to the home page to prevent 404 errors */}
-              <Route path="*" element={<Navigate to={ROUTES.HOME} />} />
-            </Routes>
-          </MoviesContextProvider>
+          <AuthContextProvider>
+            <SiteHeader />
+            <MoviesContextProvider>
+              {/* I define all application routes here. Each route maps a path to a page component.
+                  Routes are organized by feature (auth, movies, reviews, actors, search) for clarity. */}
+              <Routes>
+                {/* Authentication Routes - Public */}
+                <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
+                <Route path={ROUTES.AUTH.SIGNUP} element={<SignupPage />} />
+
+                {/* Protected Routes - Require Authentication */}
+                <Route
+                  path={ROUTES.MOVIES.MY_LIST}
+                  element={
+                    <ProtectedRoute>
+                      <MyListPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.REVIEWS.FORM}
+                  element={
+                    <ProtectedRoute>
+                      <AddMovieReviewPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Public Routes - No Authentication Required */}
+                <Route
+                  path={ROUTES.MOVIES.UPCOMING}
+                  element={<UpcomingMoviesPage />}
+                />
+                <Route
+                  path={ROUTES.MOVIES.POPULAR}
+                  element={<PopularMoviesPage />}
+                />
+                <Route
+                  path={ROUTES.MOVIES.TOP_RATED}
+                  element={<TopRatedMoviesPage />}
+                />
+                <Route
+                  path={ROUTES.MOVIES.NOW_PLAYING}
+                  element={<NowPlayingMoviesPage />}
+                />
+                <Route path={ROUTES.REVIEWS.VIEW} element={<MovieReviewPage />} />
+                <Route path={ROUTES.MOVIES.DETAILS} element={<MoviePage />} />
+                <Route
+                  path={ROUTES.ACTORS.DETAILS}
+                  element={<ActorDetailsPage />}
+                />
+                <Route
+                  path={ROUTES.SEARCH.RESULTS}
+                  element={<SearchResultsPage />}
+                />
+                <Route path={ROUTES.HOME} element={<HomePage />} />
+
+                {/* I redirect any unmatched routes to the home page to prevent 404 errors */}
+                <Route path="*" element={<Navigate to={ROUTES.HOME} />} />
+              </Routes>
+            </MoviesContextProvider>
+          </AuthContextProvider>
         </BrowserRouter>
         <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>
