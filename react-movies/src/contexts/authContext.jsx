@@ -130,8 +130,12 @@ const AuthContextProvider = ({ children }) => {
   // I store the JWT token for authenticated API requests
   const [token, setToken] = useState(null);
 
-  // I track loading state during async operations
+  // I track loading state during async operations (login/signup)
   const [loading, setLoading] = useState(false);
+
+  // I track whether we're still checking localStorage for a saved session
+  // This prevents the "flash to login" issue on page refresh
+  const [isRestoringSession, setIsRestoringSession] = useState(true);
 
   // I store error messages for display in UI
   const [error, setError] = useState(null);
@@ -160,6 +164,8 @@ const AuthContextProvider = ({ children }) => {
         localStorage.removeItem('token');
       }
     }
+    // Mark session restoration as complete (whether we found a token or not)
+    setIsRestoringSession(false);
   }, []); // Empty dependency array = run once on mount
 
   /**
@@ -259,6 +265,7 @@ const AuthContextProvider = ({ children }) => {
         user,
         token,
         isAuthenticated,
+        isRestoringSession, // True while checking localStorage for saved session
         loading,
         error,
 

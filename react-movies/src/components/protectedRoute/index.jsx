@@ -11,6 +11,11 @@
  *    - No intermediate "please login" screen - direct redirect to login
  *    - Clean UX: user sees login page immediately
  *
+ * 2. Session Restoration Handling
+ *    - I wait while AuthContext checks localStorage for a saved session
+ *    - This prevents the "flash to login" issue on page refresh
+ *    - Once checking is complete, I redirect if not authenticated
+ *
  * 2. Children Pass-Through
  *    - When authenticated, I simply render the children (the protected page)
  *    - This keeps the component flexible - any page can be protected
@@ -62,9 +67,17 @@ import { ROUTES } from "../../constants/routes";
  */
 const ProtectedRoute = ({ children }) => {
   // I access the auth context to check authentication status
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, isRestoringSession } = useContext(AuthContext);
 
-  // If not authenticated, redirect to login page
+  // While checking localStorage for a saved session, don't redirect yet
+  // This prevents the "flash to login" issue on page refresh
+  if (isRestoringSession) {
+    // Return null to show nothing while checking
+    // Could also show a loading spinner here if preferred
+    return null;
+  }
+
+  // If not authenticated (and we've finished checking), redirect to login page
   if (!isAuthenticated) {
     // Navigate component performs a declarative redirect
     // replace prop replaces current history entry (so back button doesn't return here)
