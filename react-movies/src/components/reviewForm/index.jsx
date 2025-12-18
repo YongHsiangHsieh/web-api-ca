@@ -47,13 +47,14 @@
  *    - Error messages are associated with their fields
  *    - AutoFocus on author field for keyboard users
  *
- * 8. Context Integration
+ * 8. Context Integration & Backend Sync
  *    - Submits review to MoviesContext for global state management
- *    - Passes both movie object and review data to context
- *    - Review includes movieId for proper association
+ *    - MoviesContext syncs the review to the backend database
+ *    - Review persists across sessions and page refreshes
+ *    - Author is automatically set to the logged-in user's username
  *
  * Data Flow:
- * - User fills form → Validation on submit → Context stores review → Success message → Navigate to favorites
+ * - User fills form → Validation → Context stores review → Backend sync → Success message → Navigate to My List
  *
  * @component
  * @example
@@ -187,21 +188,27 @@ const ReviewForm = ({ movie }) => {
   /**
    * Handles form submission.
    *
-   * I receive the validated form data, attach the movie ID and rating,
-   * then store it in the context. Finally, I show the success notification.
+   * I receive the validated form data, build the review object with proper
+   * field names, then store it via context (which syncs to backend).
    * React-hook-form ensures this only runs if validation passes.
    *
-   * @param {Object} review - Validated form data
-   * @param {string} review.author - Name of the review author
-   * @param {string} review.review - The review text content
+   * Note: The 'author' field is for display only - the backend automatically
+   * uses the authenticated user's username.
+   *
+   * @param {Object} formData - Validated form data
+   * @param {string} formData.author - Name entered by user (for display)
+   * @param {string} formData.review - The review text content
    */
-  const onSubmit = (review) => {
-    // I attach the movie ID to associate the review with the correct movie
-    review.movieId = movie.id;
-    // I attach the rating from local state
-    review.rating = rating;
-    // I store the review in the global context
-    context.addReview(movie, review);
+  const onSubmit = async (formData) => {
+    // I build the review object with field names expected by the backend
+    const review = {
+      rating: rating,
+      content: formData.review,  // Map 'review' field to 'content' for backend
+    };
+
+    // I store the review via context (syncs to backend)
+    await context.addReview(movie, review);
+
     // I show the success message
     setOpen(true);
   };
