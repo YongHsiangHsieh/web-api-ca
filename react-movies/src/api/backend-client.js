@@ -360,6 +360,87 @@ export const removeFromMustWatch = async (token, movieId) => {
   return data.mustWatch;
 };
 
+// ============================================
+// REVIEWS API FUNCTIONS
+// These handle user's movie reviews
+// All require authentication (token parameter)
+// ============================================
+
+/**
+ * Gets the authenticated user's list of movie reviews
+ * 
+ * @async
+ * @function
+ * @param {string} token - JWT token from login
+ * 
+ * @returns {Promise<Array>} Array of review objects
+ *          Each review: { movieId, movieTitle, author, rating, content, createdAt }
+ * 
+ * @throws {Error} Throws if not authenticated or request fails
+ * 
+ * @example
+ * const reviews = await getReviews(token);
+ * console.log(reviews); // [{ movieId: 550, movieTitle: 'Fight Club', rating: 5, ... }]
+ */
+export const getReviews = async (token) => {
+  const response = await fetch(`${BASE_URL}/users/reviews`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.msg || 'Failed to get reviews');
+  }
+
+  return data.reviews;
+};
+
+/**
+ * Adds a new movie review for the authenticated user
+ * 
+ * @async
+ * @function
+ * @param {string} token - JWT token from login
+ * @param {Object} reviewData - The review data
+ * @param {number} reviewData.movieId - TMDB movie ID
+ * @param {string} reviewData.movieTitle - Movie title
+ * @param {number} reviewData.rating - Rating from 1-5
+ * @param {string} reviewData.content - Review text content
+ * 
+ * @returns {Promise<Object>} The created review object
+ * 
+ * @throws {Error} Throws if not authenticated or request fails
+ * 
+ * @example
+ * const review = await addReview(token, {
+ *   movieId: 550,
+ *   movieTitle: 'Fight Club',
+ *   rating: 5,
+ *   content: 'Amazing movie!'
+ * });
+ */
+export const addReview = async (token, reviewData) => {
+  const response = await fetch(`${BASE_URL}/users/reviews`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(reviewData),
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.msg || 'Failed to add review');
+  }
+
+  return data.review;
+};
+
 /**
  * Helper functions for extracting data from React Query's queryKey
  * 
