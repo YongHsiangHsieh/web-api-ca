@@ -1,6 +1,6 @@
 # Assignment Two - Full Stack Movie Application
 
-Name: Yong Hsiang Hsieh
+Name: Yong Hsiang Hsieh   
 Student Number: 20100776
 
 ## Project Overview
