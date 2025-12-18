@@ -100,7 +100,7 @@ export const MoviesContext = React.createContext(null);
  * @returns {JSX.Element} A Context Provider wrapping the children
  */
 const MoviesContextProvider = ({ children }) => {
-  // I get auth state to determine if we should sync with backend
+  // I get auth state to determine if the app should sync with backend
   const { token, isAuthenticated } = useContext(AuthContext);
 
   // I maintain favorites as an array of movie IDs
@@ -143,8 +143,6 @@ const MoviesContextProvider = ({ children }) => {
         await addFavorite(token, movieId);
       } catch (error) {
         console.error("Failed to sync favorite to backend:", error);
-        // Note: We don't revert the UI here for simplicity
-        // In production, you might want to show an error toast
       }
     }
   };

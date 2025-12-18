@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
  * TMDB API Module - Backend
  * 
  * This module centralizes ALL communication with The Movie Database (TMDB) API.
- * The frontend never talks to TMDB directly - it goes through our backend instead.
+ * The frontend never talks to TMDB directly - it goes through the backend instead.
  * 
  * Benefits:
  * - API key is kept secure on the server

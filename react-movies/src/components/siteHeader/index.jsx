@@ -113,7 +113,7 @@ const SiteHeader = () => {
   // I access the theme to use with media queries
   const theme = useTheme();
 
-  // I check if we're on a mobile device (below md breakpoint)
+  // I check if the screen is mobile-sized (below md breakpoint)
   // This determines whether to show the hamburger menu or desktop buttons
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 

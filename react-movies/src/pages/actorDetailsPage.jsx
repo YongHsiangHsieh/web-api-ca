@@ -25,7 +25,6 @@ import { getPersonDetails, getPersonMovieCredits } from "../api/tmdb-api";
  * @example
  * // Used in routing configuration at path: /actor/:id
  * import ActorDetailsPage from './pages/actorDetailsPage';
- * // Then add to your router configuration
  */
 const ActorDetailsPage = () => {
   // I extract the actor ID from the URL route parameters. This ID is used to fetch
@@ -49,7 +48,7 @@ const ActorDetailsPage = () => {
   // I check if there's a loading or error state for the biographical information.
   // The PersonState component renders skeleton loaders while fetching or an error
   // message if the fetch fails. If either state exists, I return that component and
-  // exit early, since we need the person data to display the page.
+  // exit early, since I need the person data to display the page.
   const personStateComponent = PersonState();
   if (personStateComponent) return personStateComponent;
 

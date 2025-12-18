@@ -100,7 +100,7 @@ const PageHeader = ({ title, movie, showNavigation = true }) => {
   // This allows the component to work in both simple and detailed header modes
   const displayTitle = movie ? movie.title : title;
 
-  // I track whether we have movie details to conditionally apply movie-specific styling
+  // I track whether movie details exist to conditionally apply movie-specific styling
   const hasMovieDetails = Boolean(movie);
 
   return (

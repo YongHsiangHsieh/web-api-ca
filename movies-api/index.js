@@ -9,12 +9,12 @@ import cors from 'cors';
 dotenv.config();
 
 const errHandler = (err, req, res, next) => {
-  /* if the error in development then send stack trace to display whole error,
-  if it's in production then just send error message  */
+  /* I check if NODE_ENV is set to hide detailed errors,
+  otherwise I display the full stack trace for debugging  */
   if(process.env.NODE_ENV === 'production') {
     return res.status(500).send(`Something went wrong!`);
   }
-  res.status(500).send(`Hey!! You caught the error 👍👍. Here's the details: ${err.stack} `);
+  res.status(500).send(`Error caught 👍👍. Here are the details: ${err.stack} `);
 };
 
 const app = express();

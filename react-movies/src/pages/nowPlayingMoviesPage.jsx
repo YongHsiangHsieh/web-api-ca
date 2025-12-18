@@ -24,7 +24,6 @@ import { QUERY_KEYS } from "../constants/queryKeys";
  * @example
  * // Used in routing configuration
  * import NowPlayingMoviesPage from './pages/nowPlayingMoviesPage';
- * // Then add to your router configuration
  */
 const NowPlayingMoviesPage = () => {
   // I fetch the list of now playing movies using the useMovieList hook, which handles

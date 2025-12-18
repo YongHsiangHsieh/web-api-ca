@@ -8,16 +8,16 @@ import {
  * Movies API Module - Frontend
  * 
  * This module provides all API functions for the React frontend.
- * ALL calls now go through our backend API instead of directly to TMDB.
+ * ALL calls now go through my backend API instead of directly to TMDB.
  * 
  * Key Changes from Original:
  * - Uses backendFetch() instead of apiClient()
  * - No API key handling (backend has it)
- * - Simpler URLs (just our backend endpoints)
+ * - Simpler URLs (just my backend endpoints)
  * - Same function signatures (React Query compatible)
  * 
  * The frontend doesn't know or care about TMDB anymore.
- * It just calls our backend and gets movie data back.
+ * It just calls my backend and gets movie data back.
  */
 
 // ============================================

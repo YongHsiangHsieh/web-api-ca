@@ -95,7 +95,7 @@ const LoginPage = () => {
       // I redirect to home page after successful login
       navigate(ROUTES.HOME);
     }
-    // If login fails, the context sets the error state which we display below
+    // If login fails, the context sets the error state which I display below
   };
 
   return (

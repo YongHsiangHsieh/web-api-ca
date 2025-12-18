@@ -2,27 +2,26 @@
  * Backend Client Module
  * 
  * This module provides a simple, reusable HTTP client for communicating
- * with our Movies API backend. All frontend API calls go through this client.
+ * with my Movies API backend. All frontend API calls go through this client.
  * 
  * Key Benefits:
- * - Centralized base URL (easy to change for production)
+ * - Centralized base URL
  * - Consistent error handling across all API calls
  * - Clean, simple interface - just pass the endpoint
  * - No API keys needed - backend handles authentication with TMDB
  * 
  * Design Philosophy:
  * Keep it simple! The frontend doesn't need to know about TMDB, API keys,
- * or complex URL building. It just calls our backend and gets data back.
+ * or complex URL building. It just calls the backend and gets data back.
  */
 
 /**
- * Base URL for our backend API
- * In production, this would be your deployed backend URL
+ * Base URL for my backend API
  */
 const BASE_URL = 'http://localhost:8080/api';
 
 /**
- * Makes a GET request to our backend API
+* Makes a GET request to my backend API
  * 
  * This is the main function used by all API calls in the frontend.
  * It handles:
@@ -85,7 +84,7 @@ export const backendFetch = async (endpoint) => {
  * 
  * @returns {Promise<string>} Success message from the backend
  * 
- * @throws {Error} Throws if registration fails (e.g., username taken, invalid password)
+ * @throws {Error} Throws if registration fails 
  *                 Error message contains the specific reason from backend
  * 
  * @example
@@ -445,10 +444,10 @@ export const addReview = async (token, reviewData) => {
  * Helper functions for extracting data from React Query's queryKey
  * 
  * React Query passes data through queryKey arrays. These helpers
- * safely extract the data we need (IDs, search queries, etc.)
+ * safely extract the data I need (IDs, search queries, etc.)
  * 
- * We keep these because they're still useful for React Query integration,
- * even though we've migrated to our backend.
+ * I keep these because they're still useful for React Query integration,
+ * even though I've migrated to my backend.
  */
 
 /**

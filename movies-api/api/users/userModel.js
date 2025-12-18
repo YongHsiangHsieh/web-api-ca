@@ -49,7 +49,7 @@ UserSchema.statics.findByUserName = function (username) {
   return this.findOne({ username: username });
 };
 UserSchema.pre("save", async function () {
-  const saltRounds = 10; // You can adjust the number of salt rounds
+  const saltRounds = 10;
   if (this.isModified("password") || this.isNew) {
     const hash = await bcrypt.hash(this.password, saltRounds);
     this.password = hash;

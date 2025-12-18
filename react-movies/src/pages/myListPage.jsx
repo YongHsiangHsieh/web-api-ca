@@ -35,7 +35,6 @@ import { mapMovieGenres } from "../utils/movie";
  * @example
  * // Used in routing configuration
  * import MyListPage from './pages/myListPage';
- * // Then add to your router configuration
  */
 const MyListPage = () => {
   // I retrieve the user's favorite, must-watch, and reviews from the MoviesContext,

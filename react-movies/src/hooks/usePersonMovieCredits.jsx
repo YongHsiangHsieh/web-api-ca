@@ -16,7 +16,7 @@
  * 2. Person ID as Primary Parameter
  *    - The personId is the key identifier for the query
  *    - Used both for the query key and passed to the query function
- *    - Ensures proper caching based on which actor's credits we're fetching
+ *    - Ensures proper caching based on which actor's credits are being fetched
  *
  * 3. Horizontal Scrollable Layout
  *    - I render filmography in a horizontal scroll container

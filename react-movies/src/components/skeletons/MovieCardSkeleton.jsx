@@ -43,7 +43,7 @@
  * 7. No Props Needed
  *    - This is a pure presentational component with no configuration
  *    - All movie cards look the same while loading
- *    - Simplifies usage - just drop it in wherever you need a loading card
+ *    - Simplifies usage - just drop it in wherever a loading card is needed
  *
  * Layout Flow:
  * - Header (title skeleton)

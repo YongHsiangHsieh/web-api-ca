@@ -78,7 +78,7 @@ import { getReviewRoute } from "../../constants/routes";
  *
  * I fetch the reviews using React Query, which gives me automatic caching and
  * loading state management. The component adapts its display based on whether
- * we're loading, have an error, or have successfully fetched the reviews.
+ * data is loading, has an error, or has been successfully fetched.
  *
  * @param {Object} props - Component props
  * @param {Object} props.movie - Movie object containing at minimum id and title

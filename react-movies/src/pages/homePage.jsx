@@ -25,7 +25,6 @@ import { QUERY_KEYS } from "../constants/queryKeys";
  * @example
  * // Used as the default home page in routing configuration
  * import HomePage from './pages/homePage';
- * // Then add to your router configuration as the index route
  */
 const HomePage = () => {
   // I fetch a general list of movies using the useMovieList hook with the DISCOVER

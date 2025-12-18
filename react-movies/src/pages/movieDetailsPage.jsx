@@ -23,7 +23,6 @@ import { useMovieById } from "../hooks/useMovieById.jsx";
  * @example
  * // Used in routing configuration at path: /movie/:id
  * import MoviePage from './pages/movieDetailsPage';
- * // Then add to your router configuration
  */
 const MoviePage = () => {
   // I extract the movie ID from the URL route parameters. This ID is used to fetch
