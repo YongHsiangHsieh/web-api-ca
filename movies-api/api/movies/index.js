@@ -118,8 +118,6 @@ router.get('/search', asyncHandler(async (req, res) => {
 // ============================================
 // SINGLE MOVIE ROUTES
 // These return data for a specific movie
-// Note: These must come AFTER the list routes to avoid conflicts
-// (e.g., /movies/popular would match /:id if /:id came first)
 // ============================================
 
 /**

@@ -4,7 +4,7 @@ import asyncHandler from 'express-async-handler';
 import jwt from 'jsonwebtoken';
 import authenticate from '../../authenticate';
 
-const router = express.Router(); // eslint-disable-line
+const router = express.Router();
 
 // register(Create)/Authenticate User
 router.post('/', asyncHandler(async (req, res) => {

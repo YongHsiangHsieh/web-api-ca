@@ -17,7 +17,6 @@ const router = express.Router();
 
 // ============================================
 // SEARCH ROUTE
-// Must come before /:id to avoid "search" being matched as an ID
 // ============================================
 
 /**
