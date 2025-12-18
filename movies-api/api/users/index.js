@@ -306,4 +306,66 @@ router.get('/reviews', authenticate, asyncHandler(async (req, res) => {
     });
 }));
 
+/**
+ * POST /api/users/reviews
+ * 
+ * Adds a new movie review for the authenticated user.
+ * Duplicate reviews for the same movie are allowed.
+ * 
+ * @body {number} movieId - TMDB movie ID
+ * @body {string} movieTitle - Movie title (stored to avoid extra API calls)
+ * @body {number} rating - Rating from 1-5
+ * @body {string} content - Review text content
+ * @returns {Object} { success: true, msg: string, review: {...} }
+ */
+router.post('/reviews', authenticate, asyncHandler(async (req, res) => {
+    const { movieId, movieTitle, rating, content } = req.body;
+    
+    // Validate required fields
+    if (!movieId || !movieTitle || !rating || !content) {
+        return res.status(400).json({
+            success: false,
+            msg: 'Missing required fields: movieId, movieTitle, rating, and content are required.'
+        });
+    }
+    
+    // Validate movieId is a number
+    if (typeof movieId !== 'number' || isNaN(movieId)) {
+        return res.status(400).json({
+            success: false,
+            msg: 'Invalid movie ID. Must be a number.'
+        });
+    }
+    
+    // Validate rating is between 1 and 5
+    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+        return res.status(400).json({
+            success: false,
+            msg: 'Invalid rating. Must be a number between 1 and 5.'
+        });
+    }
+    
+    const user = req.user;
+    
+    // Create the review object
+    const newReview = {
+        movieId,
+        movieTitle,
+        author: user.username,  // Auto-populate from logged-in user
+        rating,
+        content,
+        createdAt: new Date()
+    };
+    
+    // Add review to user's reviews array and save
+    user.reviews.push(newReview);
+    await user.save();
+    
+    res.status(201).json({
+        success: true,
+        msg: 'Review added successfully.',
+        review: newReview
+    });
+}));
+
 export default router;
