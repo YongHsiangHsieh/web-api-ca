@@ -128,7 +128,7 @@ export const useSearch = (query) => {
   } = useQuery({
     queryKey: QUERY_KEYS.SEARCH_MOVIES(query),
     queryFn: searchMovies,
-    // I only enable the query if we have a non-empty search term
+    // I only enable the query if a non-empty search term exists
     // This prevents unnecessary API calls and network requests
     enabled: !!query,
   });
@@ -148,7 +148,7 @@ export const useSearch = (query) => {
   } = useQuery({
     queryKey: QUERY_KEYS.SEARCH_PEOPLE(query),
     queryFn: searchPeople,
-    // I only enable the query if we have a non-empty search term
+    // I only enable the query if a non-empty search term exists
     enabled: !!query,
   });
 

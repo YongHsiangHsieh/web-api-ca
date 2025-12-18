@@ -133,7 +133,7 @@ const AuthContextProvider = ({ children }) => {
   // I track loading state during async operations (login/signup)
   const [loading, setLoading] = useState(false);
 
-  // I track whether we're still checking localStorage for a saved session
+  // I track whether the app is still checking localStorage for a saved session
   // This prevents the "flash to login" issue on page refresh
   const [isRestoringSession, setIsRestoringSession] = useState(true);
 
