@@ -11,24 +11,26 @@ import WriteReview from "../components/cardIcons/writeReview";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
 import { QUERY_KEYS } from "../constants/queryKeys";
 import { mapMovieGenres } from "../utils/movie";
 
 /**
- * Page component that displays the user's personal movie lists (favorites and must-watch).
+ * Page component that displays the user's personal movie lists and reviews.
  *
- * I retrieve the user's favorite and must-watch movie IDs from the MoviesContext, then fetch
+ * I retrieve the user's favorites, must-watch, and reviews from the MoviesContext, then fetch
  * the full movie details for each using React Query's useQueries hook (which allows parallel
  * queries). I handle loading states by displaying skeleton loaders, and I show an empty state
- * message if neither list has any movies.
+ * message if there's no content.
  *
- * I map genre IDs for each movie to ensure filtering compatibility, then render the movies
- * in two separate sections: "Favorite Movies" with options to remove from favorites or write
- * a review, and "Must Watch" with options to remove from the must-watch list.
+ * The page displays three sections:
+ * 1. "Favorite Movies" - with options to remove from favorites or write a review
+ * 2. "Must Watch" - with options to remove from the must-watch list
+ * 3. "My Reviews" - showing user's written reviews with movie title, rating, and content
  *
  * @component
- * @returns {React.ReactElement} A page component displaying the user's favorite and must-watch
- *                               movie collections with appropriate empty state messaging
+ * @returns {React.ReactElement} A page component displaying the user's favorites, must-watch,
+ *                               and reviews with appropriate empty state messaging
  *
  * @example
  * // Used in routing configuration
@@ -36,9 +38,9 @@ import { mapMovieGenres } from "../utils/movie";
  * // Then add to your router configuration
  */
 const MyListPage = () => {
-  // I retrieve the user's favorite and must-watch movie IDs from the MoviesContext,
+  // I retrieve the user's favorite, must-watch, and reviews from the MoviesContext,
   // which stores the user's personal collections
-  const { favorites, mustWatch } = useContext(MoviesContext);
+  const { favorites, mustWatch, myReviews } = useContext(MoviesContext);
 
   // I fetch the full movie details for each favorite movie ID using parallel queries.
   // React Query caches each movie individually, so if a movie is in both lists,
@@ -77,7 +79,7 @@ const MyListPage = () => {
     mapMovieGenres(q.data)
   );
 
-  const hasAnyMovies = favoriteMovies.length > 0 || mustWatchMovies.length > 0;
+  const hasAnyContent = favoriteMovies.length > 0 || mustWatchMovies.length > 0 || myReviews.length > 0;
 
   return (
     <Grid container>
@@ -85,16 +87,16 @@ const MyListPage = () => {
         <PageHeader title="My List" />
       </Grid>
 
-      {!hasAnyMovies && (
+      {!hasAnyContent && (
         <Grid size={12}>
           <Box sx={{ p: 4, textAlign: "center" }}>
-            {/* I display an empty state message when the user has no movies in either list,
+            {/* I display an empty state message when the user has no content,
                 encouraging them to start building their collections */}
             <Typography variant="h6" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
               Your list is empty
             </Typography>
             <Typography variant="body2" sx={{ mt: 1, color: "rgba(255, 255, 255, 0.5)" }}>
-              Start adding movies to your favorites or must-watch list
+              Start adding movies to your favorites, must-watch list, or write reviews
             </Typography>
           </Box>
         </Grid>
@@ -153,6 +155,72 @@ const MyListPage = () => {
                     </>
                   )}
                 />
+              </Grid>
+            ))}
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Reviews Section - Display user's written reviews */}
+      {myReviews.length > 0 && (
+        <Grid size={12} sx={{ p: { xs: 2, md: 2.5 } }}>
+          <Typography
+            variant="h6"
+            component="h2"
+            fontWeight={600}
+            sx={{ mb: 2, color: "white" }}
+          >
+            📝 My Reviews ({myReviews.length})
+          </Typography>
+          {/* I render reviews in a responsive grid with simple cards showing
+              movie title, rating, content preview, and date */}
+          <Grid container spacing={2}>
+            {myReviews.map((review, index) => (
+              <Grid key={`${review.movieId}-${index}`} size={{ xs: 12, sm: 6, md: 4 }}>
+                <Paper
+                  elevation={2}
+                  sx={{
+                    p: 2.5,
+                    height: "100%",
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(10px)",
+                  }}
+                >
+                  {/* Movie Title */}
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={600}
+                    sx={{ color: "primary.main", mb: 1 }}
+                  >
+                    🎬 {review.movieTitle}
+                  </Typography>
+
+                  {/* Rating Display */}
+                  <Typography variant="body2" sx={{ mb: 1, color: "text.secondary" }}>
+                    {"⭐".repeat(review.rating)}{"☆".repeat(5 - review.rating)} ({review.rating}/5)
+                  </Typography>
+
+                  {/* Review Content - Truncated if too long */}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mb: 1.5,
+                      color: "text.primary",
+                      // Limit to 3 lines with ellipsis
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    "{review.content}"
+                  </Typography>
+
+                  {/* Date and Author */}
+                  <Typography variant="caption" color="text.secondary">
+                    📅 {new Date(review.createdAt).toLocaleDateString()} • By {review.author}
+                  </Typography>
+                </Paper>
               </Grid>
             ))}
           </Grid>
