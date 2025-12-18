@@ -31,9 +31,9 @@
  *    - Arrays make it easy to map over and display collections
  *
  * 5. Reviews Storage
- *    - I store reviews as an object keyed by movie ID
- *    - This makes lookups O(1) - instant checking if a movie has a review
- *    - Object structure: { movieId: reviewObject, movieId: reviewObject, ... }
+ *    - Reviews are stored as an array of review objects (synced with backend)
+ *    - Each review: { movieId, movieTitle, author, rating, content, createdAt }
+ *    - Array allows multiple reviews per movie (duplicates allowed)
  *
  * Global State Structure:
  * {
@@ -52,8 +52,8 @@
  *   clearLists: () => void,
  *
  *   // Reviews
- *   addReview: (movie, review) => void,
- *   myReviews: { movieId: review, movieId: review, ... }
+ *   addReview: (movie, review) => Promise<Object|null>,
+ *   myReviews: [{ movieId, movieTitle, author, rating, content, createdAt }, ...]
  * }
  *
  * @module contexts/moviesContext
@@ -68,6 +68,8 @@ import {
   getMustWatch,
   addToMustWatch as apiAddToMustWatch,
   removeFromMustWatch as apiRemoveFromMustWatch,
+  getReviews,
+  addReview as apiAddReview,
 } from "../api/backend-client";
 
 /**
@@ -107,8 +109,9 @@ const MoviesContextProvider = ({ children }) => {
   // I maintain must-watch as an array of movie IDs
   const [mustWatch, setMustWatch] = useState([]);
 
-  // I maintain reviews as an object keyed by movieId for O(1) lookup
-  const [myReviews, setMyReviews] = useState({});
+  // I maintain reviews as an array of review objects
+  // Each review: { movieId, movieTitle, author, rating, content, createdAt }
+  const [myReviews, setMyReviews] = useState([]);
 
   // ============================================
   // FAVORITES HANDLERS
@@ -233,15 +236,17 @@ const MoviesContextProvider = ({ children }) => {
    */
   const loadUserLists = async (userToken) => {
     try {
-      // Fetch both lists in parallel for better performance
-      const [favoritesData, mustWatchData] = await Promise.all([
+      // Fetch all lists in parallel for better performance
+      const [favoritesData, mustWatchData, reviewsData] = await Promise.all([
         getFavorites(userToken),
         getMustWatch(userToken),
+        getReviews(userToken),
       ]);
 
       // Update local state with backend data
       setFavorites(favoritesData || []);
       setMustWatch(mustWatchData || []);
+      setMyReviews(reviewsData || []);
     } catch (error) {
       console.error("Failed to load user lists from backend:", error);
       // Keep existing local state if load fails
@@ -257,7 +262,7 @@ const MoviesContextProvider = ({ children }) => {
   const clearLists = () => {
     setFavorites([]);
     setMustWatch([]);
-    setMyReviews({});
+    setMyReviews([]);
   };
 
   // ============================================
@@ -306,21 +311,52 @@ const MoviesContextProvider = ({ children }) => {
   /**
    * Adds a review for a movie.
    *
-   * I store the review in an object keyed by the movie ID. This allows
-   * quick lookup of reviews by movie ID and makes it easy to update
-   * or replace a review for a specific movie.
+   * I use optimistic updates: the UI updates immediately, and the backend
+   * sync happens in the background. The review is stored in the backend
+   * and persists across sessions.
    *
-   * Note: Reviews are currently stored locally only.
-   * Backend persistence could be added later.
-   *
-   * @param {Object} movie - Movie object containing the movie ID
-   * @param {Object} review - Review object containing review data
+   * @param {Object} movie - Movie object containing id and title
+   * @param {Object} review - Review object containing rating and content
+   * @returns {Promise<Object|null>} The created review object, or null if failed
    */
-  const addReview = (movie, review) => {
-    setMyReviews((prev) => ({
-      ...prev,
-      [movie.id]: review,
-    }));
+  const addReview = async (movie, review) => {
+    // Build the review data for the backend
+    const reviewData = {
+      movieId: movie.id,
+      movieTitle: movie.title,
+      rating: review.rating,
+      content: review.content,
+    };
+
+    // Optimistic update - add to local state immediately
+    const optimisticReview = {
+      ...reviewData,
+      author: "You", // Placeholder, backend will set actual username
+      createdAt: new Date().toISOString(),
+    };
+    setMyReviews((prev) => [...prev, optimisticReview]);
+
+    // Sync to backend if authenticated
+    if (isAuthenticated && token) {
+      try {
+        const savedReview = await apiAddReview(token, reviewData);
+        // Replace optimistic review with actual saved review
+        setMyReviews((prev) => {
+          // Remove the optimistic one and add the real one
+          const withoutOptimistic = prev.filter(
+            (r) => !(r.movieId === movie.id && r.author === "You")
+          );
+          return [...withoutOptimistic, savedReview];
+        });
+        return savedReview;
+      } catch (error) {
+        console.error("Failed to save review to backend:", error);
+        // Keep the optimistic review in local state
+        return null;
+      }
+    }
+
+    return optimisticReview;
   };
 
   return (
