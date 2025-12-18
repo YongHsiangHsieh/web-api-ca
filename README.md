@@ -1,5 +1,8 @@
 # Assignment Two - Full Stack Movie Application
 
+Name: Yong Hsiang Hsieh
+Student Number: 20100776
+
 ## Project Overview
 
 This project is a full-stack movie application built with React (frontend) and Express/Node.js (backend), using MongoDB for data persistence. The application allows users to browse movies from TMDB, manage personal lists (favorites, must-watch), and write reviews.
