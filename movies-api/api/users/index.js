@@ -284,4 +284,26 @@ router.delete('/mustwatch/:movieId', authenticate, asyncHandler(async (req, res)
     });
 }));
 
+// ============================================
+// REVIEWS ENDPOINTS
+// All endpoints require authentication
+// ============================================
+
+/**
+ * GET /api/users/reviews
+ * 
+ * Returns the authenticated user's list of movie reviews.
+ * Requires valid JWT token in Authorization header.
+ * 
+ * @returns {Object} { success: true, reviews: [{ movieId, movieTitle, author, rating, content, createdAt }, ...] }
+ */
+router.get('/reviews', authenticate, asyncHandler(async (req, res) => {
+    const user = req.user;
+    
+    res.status(200).json({
+        success: true,
+        reviews: user.reviews || []
+    });
+}));
+
 export default router;
